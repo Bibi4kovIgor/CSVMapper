@@ -7,6 +7,7 @@ import annotation.csv.CsvField;
 import annotation.validators.Validator;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
@@ -18,6 +19,7 @@ public class CsvParser<T> {
     public static final String ERROR_ON_CREATE_OBJECT_MESSAGE = "Error on create object";
     public static final String CLASS_DOES_NOT_SUPPORTS_CSV = "Class does not supports CSV";
     public static final String PHONE_VALIDATION_PROBLEM = "Phone validation problem";
+    public static final String DEFAULT_CONSTRUCTOR_EXISTS_EXCEPTION_MESSAGE = "Default constructor declaring is needed!";
     Logger logger = Logger.getLogger(CsvParser.class.getName());
 
     private final Class<T> clazz;
@@ -27,7 +29,10 @@ public class CsvParser<T> {
     }
 
     public T parseModel(String csvString) {
-        if(!clazz.isAnnotationPresent(CsvEntity.class)) {
+        if (!isDefaultConstructorExists()) {
+            throw new RuntimeException(DEFAULT_CONSTRUCTOR_EXISTS_EXCEPTION_MESSAGE);
+        }
+        if (!clazz.isAnnotationPresent(CsvEntity.class)) {
             throw new RuntimeException(CLASS_DOES_NOT_SUPPORTS_CSV);
         }
         T object = getObject();
@@ -46,6 +51,16 @@ public class CsvParser<T> {
             }
         }
         return object;
+    }
+
+    private boolean isDefaultConstructorExists() {
+        Constructor<?>[] constructors = clazz.getDeclaredConstructors();
+        for (Constructor<?> constructor : constructors) {
+            if (constructor.getParameterCount() == 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void checkField(Object object, Field field) throws IllegalAccessException {
