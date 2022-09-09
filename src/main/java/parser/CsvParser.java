@@ -1,9 +1,9 @@
 package parser;
 
 
-import annotation.validators.PhoneValidator;
 import annotation.csv.CsvEntity;
 import annotation.csv.CsvField;
+import annotation.validators.PhoneValidator;
 import annotation.validators.Validator;
 import org.jetbrains.annotations.NotNull;
 
@@ -67,20 +67,25 @@ public class CsvParser<T> {
         if (!clazz.isAnnotationPresent(Validator.class)) {
             return;
         }
+
+        validatePhone(object, field);
+
+    }
+
+    private void validatePhone(Object object, Field field) throws IllegalAccessException {
         if (!field.isAnnotationPresent(PhoneValidator.class)) {
             return;
         }
 
         String phoneNumber = String.valueOf(field.get(object));
-        if (phoneNumber.isBlank() || phoneNumber.isEmpty()){
+        if (phoneNumber.isBlank() || phoneNumber.isEmpty()) {
             return;
         }
 
-        if(!phoneNumber.trim()
+        if (!phoneNumber.trim()
                 .matches(field.getAnnotation(PhoneValidator.class).validatePhone())) {
             throw new RuntimeException(PHONE_VALIDATION_PROBLEM);
         }
-
     }
 
     @NotNull
